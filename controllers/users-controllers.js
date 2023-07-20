@@ -178,6 +178,35 @@ const addUserLinks = async (req, res, next) => {
   res.status(201).json({ linksAdded: true });
 };
 
+const getUserDetails = async (req, res, next) => {
+  let userId = req.params.userId;
+  let user;
+
+  try {
+    user = await User.findById(userId);
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching user details failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError(
+      "Could not find a user for the provider id, please try again later.",
+      500
+    );
+    return next(error);
+  }
+
+  res.json({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+  });
+};
+
 const getUserLinks = async (req, res, next) => {
   let userId = req.params.userId;
   let links;
@@ -318,3 +347,4 @@ exports.getUserLinks = getUserLinks;
 exports.deleteLink = deleteLink;
 exports.updateLinkDetails = updateLinkDetails;
 exports.updateUserDetails = updateUserDetails;
+exports.getUserDetails = getUserDetails;
