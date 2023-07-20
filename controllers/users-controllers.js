@@ -127,6 +127,8 @@ const addUserLinks = async (req, res, next) => {
   let userId = req.params.userId;
   let existingUser;
 
+  console.log(links);
+
   try {
     existingUser = await User.findOne({ _id: userId });
   } catch (err) {
@@ -150,7 +152,10 @@ const addUserLinks = async (req, res, next) => {
     sess.startTransaction();
 
     for (let link of links) {
-      let existingLink = await Link.findOne({ platform: link.platform });
+      let existingLink = await Link.findOne({
+        platform: link.platform,
+        user: userId,
+      });
       if (!existingLink) {
         let newLink = new Link({
           platform: link.platform,
@@ -167,7 +172,6 @@ const addUserLinks = async (req, res, next) => {
     await existingUser.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    console.log(err);
     const error = new HttpError(
       "Something went wrong, could not save user links.",
       500
@@ -178,34 +182,34 @@ const addUserLinks = async (req, res, next) => {
   res.status(201).json({ linksAdded: true });
 };
 
-// const getUserDetails = async (req, res, next) => {
-//   let userId = req.params.userId;
-//   let user;
+const getUserDetails = async (req, res, next) => {
+  let userId = req.params.userId;
+  let user;
 
-//   try {
-//     user = await User.findById(userId);
-//   } catch (err) {
-//     const error = new HttpError(
-//       "Fetching user details failed, please try again later.",
-//       500
-//     );
-//     return next(error);
-//   }
+  try {
+    user = await User.findById(userId);
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching user details failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
 
-//   if (!user) {
-//     const error = new HttpError(
-//       "Could not find a user for the provider id, please try again later.",
-//       500
-//     );
-//     return next(error);
-//   }
+  if (!user) {
+    const error = new HttpError(
+      "Could not find a user for the provider id, please try again later.",
+      500
+    );
+    return next(error);
+  }
 
-//   res.json({
-//     firstName: user.firstName,
-//     lastName: user.lastName,
-//     email: user.email,
-//   });
-// };
+  res.json({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+  });
+};
 
 const getUserLinks = async (req, res, next) => {
   let userId = req.params.userId;
@@ -220,6 +224,8 @@ const getUserLinks = async (req, res, next) => {
     );
     return next(error);
   }
+
+  console.log(links);
 
   res.json({
     links: links.map((link) => link.toObject({ getters: true })),
@@ -347,4 +353,4 @@ exports.getUserLinks = getUserLinks;
 exports.deleteLink = deleteLink;
 exports.updateLinkDetails = updateLinkDetails;
 exports.updateUserDetails = updateUserDetails;
-// exports.getUserDetails = getUserDetails;
+exports.getUserDetails = getUserDetails;
